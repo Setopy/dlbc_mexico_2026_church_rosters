@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1565C0">
+    <meta name="description" content="Deeper Life Bible Church Mexico - Church Roster & Reminders">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DLBC Roster">
+    
+    <title>DLBC Mexico - Church Roster</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #1565C0;
+            --primary-dark: #0D47A1;
+            --secondary: #2E7D32;
+            --accent: #FF6F00;
+            --background: #F5F5F5;
+            --card: #FFFFFF;
+            --text: #212121;
+            --text-light: #757575;
+            --border: #E0E0E0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 100px);
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .login-card h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .login-card p {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        
+        .member-select {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .member-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        /* Main App */
+        .app-container {
+            display: none;
+            padding-bottom: 80px;
+        }
+        
+        .app-container.active {
+            display: block;
+        }
+        
+        /* Welcome Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--secondary), #1B5E20);
+            color: white;
+            padding: 20px;
+            margin: 15px;
+            border-radius: 12px;
+        }
+        
+        .welcome-banner h2 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .welcome-banner p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        /* Section */
+        .section {
+            padding: 15px;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Event Cards */
+        .event-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .event-card.moderator {
+            border-left-color: var(--secondary);
+        }
+        
+        .event-card.standby {
+            border-left-color: var(--accent);
+        }
+        
+        .event-card.gck {
+            border-left-color: #9C27B0;
+        }
+        
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .event-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .event-role {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .role-moderator {
+            background: #E8F5E9;
+            color: var(--secondary);
+        }
+        
+        .role-standby {
+            background: #FFF3E0;
+            color: var(--accent);
+        }
+        
+        .role-gck {
+            background: #F3E5F5;
+            color: #9C27B0;
+        }
+        
+        .event-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .event-details span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            padding: 0 15px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            gap: 8px;
+        }
+        
+        .tab {
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            border: 2px solid var(--border);
+            background: var(--card);
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(21, 101, 192, 0.1);
+        }
+        
+        .nav-item span {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        /* Calendar View */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .calendar-nav button {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .month-year {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            padding: 0 15px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+            padding: 10px 0;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--card);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .calendar-day.today {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .calendar-day.has-event::after {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--secondary);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 5px;
+        }
+        
+        .calendar-day.other-month {
+            color: var(--text-light);
+            opacity: 0.5;
+        }
+        
+        /* Settings */
+        .settings-item {
+            background: var(--card);
+            padding: 15px;
+            margin: 0 15px 10px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .settings-label {
+            font-weight: 500;
+        }
+        
+        .settings-desc {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        
+        .toggle {
+            width: 50px;
+            height: 28px;
+            background: var(--border);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle.active {
+            background: var(--primary);
+        }
+        
+        .toggle::after {
+            content: '';
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle.active::after {
+            left: 24px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Page Views */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <h2>🙏 Welcome</h2>
+            <p>Deeper Life Bible Church, Mexico<br>Church Roster & Reminders</p>
+            
+            <select id="memberSelect" class="member-select">
+                <option value="">-- Select Your Name --</option>
+                <option value="Pastor Nupo">Pastor Nupo</option>
+                <option value="Pastor Samuel">Pastor Samuel</option>
+                <option value="Bro Ayodele">Bro Ayodele</option>
+                <option value="Bro Mathew">Bro Mathew</option>
+                <option value="Bro Seyi">Bro Seyi</option>
+                <option value="Sister Success">Sister Success</option>
+                <option value="Sister Adebimpe">Sister Adebimpe</option>
+                <option value="Sister Ruth Faleye">Sister Ruth Faleye</option>
+                <option value="Sister Nupo Abosede">Sister Nupo Abosede</option>
+                <option value="National Pastor">National Pastor</option>
+                <option value="Mummy Jairus">Mummy Jairus</option>
+                <option value="Sister Kayode">Sister Kayode</option>
+            </select>
+            
+            <button id="loginBtn" class="btn btn-primary">Continue</button>
+        </div>
+    </div>
+    
+    <!-- Main App -->
+    <div id="appContainer" class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Deeper Life Bible Church</h1>
+            <p>Mexico City • Church Roster 2026</p>
+        </div>
+        
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div id="welcomeBanner" class="welcome-banner">
+                <h2>Welcome, <span id="userName">Member</span>! 👋</h2>
+                <p>Here's your schedule overview</p>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div id="totalEvents" class="stat-number">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div id="moderatorCount" class="stat-number">0</div>
+                    <div class="stat-label">As Moderator</div>
+                </div>
+                <div class="stat-card">
+                    <div id="standbyCount" class="stat-number">0</div>
+                    <div class="stat-label">As Standby</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📅 Upcoming Events</div>
+                <div id="upcomingEvents"></div>
+            </div>
+        </div>
+        
+        <!-- Schedule Page -->
+        <div id="schedulePage" class="page">
+            <div class="tabs" id="activityTabs">
+                <div class="tab active" data-filter="all">All</div>
+                <div class="tab" data-filter="tuesday">Tuesday</div>
+                <div class="tab" data-filter="thursday">Thursday</div>
+                <div class="tab" data-filter="friday">Friday</div>
+                <div class="tab" data-filter="gck">GCK</div>
+                <div class="tab" data-filter="bts">BTS</div>
+                <div class="tab" data-filter="wednesday">Wed Sisters</div>
+            </div>
+            
+            <div class="section">
+                <div id="scheduleList"></div>
+            </div>
+        </div>
+        
+        <!-- Calendar Page -->
+        <div id="calendarPage" class="page">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button id="prevMonth">◀</button>
+                    <button id="nextMonth">▶</button>
+                </div>
+                <div id="monthYear" class="month-year">January 2026</div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <div class="calendar-day-header">Sun</div>
+                <div class="calendar-day-header">Mon</div>
+                <div class="calendar-day-header">Tue</div>
+                <div class="calendar-day-header">Wed</div>
+                <div class="calendar-day-header">Thu</div>
+                <div class="calendar-day-header">Fri</div>
+                <div class="calendar-day-header">Sat</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">📋 Events on Selected Day</div>
+                <div id="dayEvents">
+                    <div class="empty-state">
+                        <div class="icon">📅</div>
+                        <p>Select a date to view events</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Page -->
+        <div id="settingsPage" class="page">
+            <div class="section">
+                <div class="section-title">⚙️ Settings</div>
+                
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">Push Notifications</div>
+                        <div class="settings-desc">Get reminders on your device</div>
+                    </div>
+                    <div id="notificationToggle" class="toggle"></div>
+                </div>
+                
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">Current User</div>
+                        <div id="currentUserDisplay" class="settings-desc">Not logged in</div>
+                    </div>
+                    <button id="logoutBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px;">Change</button>
+                </div>
+                
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">App Version</div>
+                        <div class="settings-desc">1.0.0 - January 2026</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-page="home">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" data-page="schedule">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+                </svg>
+                <span>Schedule</span>
+            </div>
+            <div class="nav-item" data-page="calendar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                </svg>
+                <span>Calendar</span>
+            </div>
+            <div class="nav-item" data-page="settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+                <span>Settings</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+    <script src="schedules.js"></script>
+    <script>
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new ChurchRosterApp();
+            app.init();
+        });
+    </script>
+</body>
+</html>
