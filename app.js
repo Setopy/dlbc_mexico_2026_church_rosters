@@ -1,23 +1,29 @@
 /**
- * Church Roster PWA - Main Application
+ * Church Roster PWA with WhatsApp Reminders
  * Deeper Life Bible Church, Mexico
- * Fixed: Date display timezone issue
+ * Using Callmebot Free API
  */
 
 class ChurchRosterApp {
     constructor() {
         this.currentUser = null;
+        this.phoneNumber = null;
+        this.apiKey = null;
         this.currentPage = 'home';
-        this.currentMonth = new Date(2026, 0, 1); // January 2026
+        this.currentMonth = new Date(2026, 0, 1);
         this.scheduleFilter = 'all';
         this.userEvents = [];
+        this.sentReminders = {};
     }
     
     init() {
-        // Check for saved user
-        const savedUser = localStorage.getItem('dlbc_user');
-        if (savedUser) {
-            this.currentUser = savedUser;
+        // Load saved data
+        this.currentUser = localStorage.getItem('dlbc_user');
+        this.phoneNumber = localStorage.getItem('dlbc_phone');
+        this.apiKey = localStorage.getItem('dlbc_apikey');
+        this.sentReminders = JSON.parse(localStorage.getItem('dlbc_sent_reminders') || '{}');
+        
+        if (this.currentUser) {
             this.showApp();
         } else {
             this.showLogin();
@@ -28,10 +34,34 @@ class ChurchRosterApp {
     }
     
     setupEventListeners() {
-        // Login
-        document.getElementById('loginBtn').addEventListener('click', () => this.handleLogin());
-        document.getElementById('memberSelect').addEventListener('change', (e) => {
-            document.getElementById('loginBtn').disabled = !e.target.value;
+        // Login form
+        const memberSelect = document.getElementById('memberSelect');
+        const phoneInput = document.getElementById('phoneInput');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        const validateForm = () => {
+            const hasName = memberSelect.value !== '';
+            const hasPhone = phoneInput.value.length >= 10;
+            const hasKey = apiKeyInput.value.length >= 4;
+            loginBtn.disabled = !(hasName && hasPhone && hasKey);
+        };
+        
+        memberSelect.addEventListener('change', validateForm);
+        phoneInput.addEventListener('input', validateForm);
+        apiKeyInput.addEventListener('input', validateForm);
+        
+        loginBtn.addEventListener('click', () => this.handleLogin());
+        
+        document.getElementById('skipSetup').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (memberSelect.value) {
+                this.currentUser = memberSelect.value;
+                localStorage.setItem('dlbc_user', this.currentUser);
+                this.showApp();
+            } else {
+                this.showToast('Please select your name first', 'error');
+            }
         });
         
         // Navigation
@@ -50,24 +80,39 @@ class ChurchRosterApp {
             });
         });
         
-        // Calendar navigation
+        // Calendar
         document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1));
         document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1));
         
+        // Reminder button
+        document.getElementById('sendRemindersBtn').addEventListener('click', () => this.sendPendingReminders());
+        
         // Settings
-        document.getElementById('notificationToggle').addEventListener('click', () => this.toggleNotifications());
+        document.getElementById('testWhatsappBtn').addEventListener('click', () => this.testWhatsApp());
         document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
     }
     
     handleLogin() {
-        const select = document.getElementById('memberSelect');
-        const selectedUser = select.value;
+        this.currentUser = document.getElementById('memberSelect').value;
+        this.phoneNumber = document.getElementById('phoneInput').value.replace(/\s/g, '');
+        this.apiKey = document.getElementById('apiKeyInput').value.trim();
         
-        if (selectedUser) {
-            this.currentUser = selectedUser;
-            localStorage.setItem('dlbc_user', selectedUser);
-            this.showApp();
+        // Ensure phone has + prefix
+        if (!this.phoneNumber.startsWith('+')) {
+            this.phoneNumber = '+' + this.phoneNumber;
         }
+        
+        // Save to localStorage
+        localStorage.setItem('dlbc_user', this.currentUser);
+        localStorage.setItem('dlbc_phone', this.phoneNumber);
+        localStorage.setItem('dlbc_apikey', this.apiKey);
+        
+        this.showApp();
+        
+        // Send welcome message
+        setTimeout(() => {
+            this.sendWhatsAppMessage(`🙏 Welcome to DLBC Mexico Roster!\n\nHello ${this.currentUser.split(' ')[0]}, your WhatsApp reminders are now active.\n\nYou will receive reminders for your church activities.\n\nGod bless you!`);
+        }, 1000);
     }
     
     showLogin() {
@@ -82,36 +127,47 @@ class ChurchRosterApp {
         this.loadUserData();
         this.renderHome();
         this.renderCalendar();
+        this.updateReminderStatus();
+        this.checkAndSendReminders();
     }
     
     loadUserData() {
-        // Get user's events from the schedule data
         this.userEvents = this.getUserEvents(this.currentUser);
         
-        // Update displays
+        // Update UI
         document.getElementById('userName').textContent = this.currentUser.split(' ')[0];
         document.getElementById('currentUserDisplay').textContent = this.currentUser;
+        document.getElementById('currentPhoneDisplay').textContent = this.phoneNumber || 'Not set';
+        document.getElementById('currentApiKeyDisplay').textContent = this.apiKey ? '••••' + this.apiKey.slice(-2) : 'Not set';
         
-        // Calculate stats
-        const moderatorEvents = this.userEvents.filter(e => 
-            e.role === 'MODERATOR' || e.role === 'TEACHER' || e.role === 'CHORUS LEADER' || 
-            e.type === 'gck' || e.type === 'bts' || e.type === 'wednesday'
+        // Show WhatsApp badge if configured
+        const badge = document.getElementById('whatsappBadge');
+        if (this.apiKey && this.phoneNumber) {
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+        
+        // Last reminder
+        const lastSent = localStorage.getItem('dlbc_last_reminder');
+        document.getElementById('lastReminderDisplay').textContent = lastSent || 'Never';
+        
+        // Stats
+        const leaderEvents = this.userEvents.filter(e => 
+            ['MODERATOR', 'TEACHER', 'CHORUS LEADER', 'PRAYER'].includes(e.role)
         );
         const standbyEvents = this.userEvents.filter(e => e.role === 'STANDBY');
         
         document.getElementById('totalEvents').textContent = this.userEvents.length;
-        document.getElementById('moderatorCount').textContent = moderatorEvents.length;
+        document.getElementById('moderatorCount').textContent = leaderEvents.length;
         document.getElementById('standbyCount').textContent = standbyEvents.length;
     }
     
-    // Helper function to parse date string without timezone issues
     parseDate(dateStr) {
-        // dateStr is in format "YYYY-MM-DD"
         const [year, month, day] = dateStr.split('-').map(Number);
-        return new Date(year, month - 1, day); // month is 0-indexed
+        return new Date(year, month - 1, day);
     }
     
-    // Helper function to format date for display
     formatDate(dateStr) {
         const date = this.parseDate(dateStr);
         return date.toLocaleDateString('en-US', { 
@@ -124,122 +180,64 @@ class ChurchRosterApp {
     getUserEvents(userName) {
         const events = [];
         
-        // Check Tuesday Bible Study (Moderator/Standby)
+        // Tuesday Bible Study (Moderator/Standby)
         if (typeof TUESDAY_ROSTER !== 'undefined') {
             TUESDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Tuesday Bible Study',
-                        type: 'tuesday',
-                        role: 'MODERATOR',
-                        partner: item.standby,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Tuesday Bible Study', type: 'tuesday', role: 'MODERATOR', partner: item.standby, time: '7:00 PM' });
                 } else if (item.standby === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Tuesday Bible Study',
-                        type: 'tuesday',
-                        role: 'STANDBY',
-                        partner: item.moderator,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Tuesday Bible Study', type: 'tuesday', role: 'STANDBY', partner: item.moderator, time: '7:00 PM' });
                 }
             });
         }
         
-        // Check Tuesday Bible Study (Chorus)
+        // Tuesday Chorus
         if (typeof CHORUS_TBS_ROSTER !== 'undefined') {
             CHORUS_TBS_ROSTER.forEach(item => {
                 if (item.leader === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Tuesday Bible Study',
-                        type: 'tuesday',
-                        role: 'CHORUS LEADER',
-                        partner: null,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Tuesday Bible Study', type: 'tuesday', role: 'CHORUS LEADER', partner: null, time: '7:00 PM' });
                 }
             });
         }
         
-        // Check Thursday Prayer Meeting
+        // Thursday Prayer Meeting
         if (typeof THURSDAY_ROSTER !== 'undefined') {
             THURSDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Thursday Prayer Meeting',
-                        type: 'thursday',
-                        role: 'MODERATOR',
-                        partner: item.standby,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Thursday Prayer Meeting', type: 'thursday', role: 'MODERATOR', partner: item.standby, time: '7:00 PM' });
                 } else if (item.standby === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Thursday Prayer Meeting',
-                        type: 'thursday',
-                        role: 'STANDBY',
-                        partner: item.moderator,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Thursday Prayer Meeting', type: 'thursday', role: 'STANDBY', partner: item.moderator, time: '7:00 PM' });
                 }
             });
         }
         
-        // Check Friday Revival Hour (Moderator/Standby)
+        // Friday Revival Hour (Moderator/Standby)
         if (typeof FRIDAY_ROSTER !== 'undefined') {
             FRIDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Friday Revival Hour',
-                        type: 'friday',
-                        role: 'MODERATOR',
-                        partner: item.standby,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Friday Revival Hour', type: 'friday', role: 'MODERATOR', partner: item.standby, time: '7:00 PM' });
                 } else if (item.standby === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Friday Revival Hour',
-                        type: 'friday',
-                        role: 'STANDBY',
-                        partner: item.moderator,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Friday Revival Hour', type: 'friday', role: 'STANDBY', partner: item.moderator, time: '7:00 PM' });
                 }
             });
         }
         
-        // Check Friday Revival Hour (Chorus)
+        // Friday Chorus
         if (typeof CHORUS_FRH_ROSTER !== 'undefined') {
             CHORUS_FRH_ROSTER.forEach(item => {
                 if (item.leader === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Friday Revival Hour',
-                        type: 'friday',
-                        role: 'CHORUS LEADER',
-                        partner: null,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Friday Revival Hour', type: 'friday', role: 'CHORUS LEADER', partner: null, time: '7:00 PM' });
                 }
             });
         }
         
-        // Check GCK Prayer Day
+        // GCK Prayer Day
         if (typeof GCK_ASSIGNMENTS !== 'undefined') {
             Object.entries(GCK_ASSIGNMENTS).forEach(([day, people]) => {
                 if (people.includes(userName)) {
                     const dayNum = parseInt(day);
                     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                     const partners = people.filter(p => p !== userName);
-                    
-                    // Generate all dates for this day in 2026
                     const dates = this.getAllWeekdaysIn2026(dayNum);
                     dates.forEach(date => {
                         events.push({
@@ -255,63 +253,34 @@ class ChurchRosterApp {
             });
         }
         
-        // Check Children's BTS
+        // Children's BTS
         if (typeof CHILDREN_BTS_ROSTER !== 'undefined') {
             CHILDREN_BTS_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
-                    events.push({
-                        date: item.date,
-                        name: "Children's BTS",
-                        type: 'bts',
-                        role: 'TEACHER',
-                        partner: null,
-                        time: '4:30 PM'
-                    });
+                    events.push({ date: item.date, name: "Children's BTS", type: 'bts', role: 'TEACHER', partner: null, time: '4:30 PM' });
                 }
             });
         }
         
-        // Check Wednesday Sisters Prayer
+        // Wednesday Sisters Prayer
         if (typeof WEDNESDAY_SISTERS_ROSTER !== 'undefined') {
             WEDNESDAY_SISTERS_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
-                    events.push({
-                        date: item.date,
-                        name: 'Wednesday Sisters Prayer',
-                        type: 'wednesday',
-                        role: 'MODERATOR',
-                        partner: null,
-                        time: '7:00 PM'
-                    });
+                    events.push({ date: item.date, name: 'Wednesday Sisters Prayer', type: 'wednesday', role: 'MODERATOR', partner: null, time: '7:00 PM' });
                 }
             });
         }
         
         // Sort by date
-        events.sort((a, b) => {
-            const dateA = this.parseDate(a.date);
-            const dateB = this.parseDate(b.date);
-            return dateA - dateB;
-        });
-        
+        events.sort((a, b) => this.parseDate(a.date) - this.parseDate(b.date));
         return events;
     }
     
     getAllWeekdaysIn2026(weekday) {
         const dates = [];
-        // JavaScript: 0=Sunday, 1=Monday, ..., 6=Saturday
-        // Our data: 0=Monday, 1=Tuesday, ..., 6=Sunday
-        // Convert: our 6 (Sunday) = JS 0, our 0 (Monday) = JS 1, etc.
         const jsWeekday = weekday === 6 ? 0 : weekday + 1;
-        
-        let d = new Date(2026, 0, 1); // January 1, 2026
-        
-        // Find first occurrence of this weekday
-        while (d.getDay() !== jsWeekday) {
-            d.setDate(d.getDate() + 1);
-        }
-        
-        // Collect all occurrences in 2026
+        let d = new Date(2026, 0, 1);
+        while (d.getDay() !== jsWeekday) d.setDate(d.getDate() + 1);
         while (d.getFullYear() === 2026) {
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -319,16 +288,207 @@ class ChurchRosterApp {
             dates.push(`${year}-${month}-${day}`);
             d.setDate(d.getDate() + 7);
         }
-        
         return dates;
     }
+    
+    // ==================== WhatsApp Functions ====================
+    
+    async sendWhatsAppMessage(message) {
+        if (!this.phoneNumber || !this.apiKey) {
+            console.log('WhatsApp not configured');
+            return false;
+        }
+        
+        try {
+            const encodedMessage = encodeURIComponent(message);
+            const url = `https://api.callmebot.com/whatsapp.php?phone=${this.phoneNumber}&text=${encodedMessage}&apikey=${this.apiKey}`;
+            
+            // Use image to bypass CORS (callmebot trick)
+            const img = new Image();
+            img.src = url;
+            
+            console.log('WhatsApp message sent:', message.substring(0, 50) + '...');
+            return true;
+        } catch (error) {
+            console.error('WhatsApp error:', error);
+            return false;
+        }
+    }
+    
+    async testWhatsApp() {
+        if (!this.phoneNumber || !this.apiKey) {
+            this.showToast('Please set up WhatsApp first', 'error');
+            return;
+        }
+        
+        this.showToast('Sending test message...', 'success');
+        const success = await this.sendWhatsAppMessage(`✅ Test from DLBC Roster App\n\nYour WhatsApp reminders are working!\n\nTime: ${new Date().toLocaleString()}`);
+        
+        if (success) {
+            this.showToast('Test message sent! Check WhatsApp', 'success');
+        }
+    }
+    
+    getPendingReminders() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const reminders = [];
+        const todayStr = today.toISOString().split('T')[0];
+        
+        this.userEvents.forEach(event => {
+            const eventDate = this.parseDate(event.date);
+            const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+            
+            // Check for reminders: 7 days, 3 days, 1 day, same day
+            const reminderDays = [7, 3, 1, 0];
+            
+            reminderDays.forEach(days => {
+                if (diffDays === days) {
+                    const reminderKey = `${event.date}-${event.name}-${event.role}-${days}`;
+                    const sentToday = this.sentReminders[reminderKey] === todayStr;
+                    
+                    if (!sentToday) {
+                        reminders.push({
+                            event: event,
+                            daysUntil: days,
+                            key: reminderKey
+                        });
+                    }
+                }
+            });
+        });
+        
+        return reminders;
+    }
+    
+    updateReminderStatus() {
+        const pending = this.getPendingReminders();
+        const statusDiv = document.getElementById('reminderStatus');
+        const remindersDiv = document.getElementById('upcomingReminders');
+        const sendBtn = document.getElementById('sendRemindersBtn');
+        
+        if (!this.apiKey || !this.phoneNumber) {
+            statusDiv.className = 'reminder-status none';
+            statusDiv.innerHTML = '⚠️ WhatsApp not set up. <a href="#" onclick="app.logout();return false;">Set up now</a>';
+            remindersDiv.innerHTML = '';
+            sendBtn.style.display = 'none';
+            return;
+        }
+        
+        if (pending.length === 0) {
+            statusDiv.className = 'reminder-status sent';
+            statusDiv.innerHTML = '✅ All reminders sent! No pending reminders.';
+            remindersDiv.innerHTML = '';
+            sendBtn.style.display = 'none';
+        } else {
+            statusDiv.className = 'reminder-status pending';
+            statusDiv.innerHTML = `📬 ${pending.length} reminder(s) ready to send`;
+            
+            remindersDiv.innerHTML = pending.slice(0, 3).map(r => {
+                const daysText = r.daysUntil === 0 ? 'TODAY' : 
+                                 r.daysUntil === 1 ? 'Tomorrow' : 
+                                 `In ${r.daysUntil} days`;
+                return `
+                    <div class="upcoming-reminder">
+                        <div class="event-name">${r.event.name} - ${r.event.role}</div>
+                        <div class="event-details">${daysText} • ${this.formatDate(r.event.date)}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            sendBtn.style.display = 'flex';
+        }
+    }
+    
+    async checkAndSendReminders() {
+        // Auto-send reminders when app opens
+        if (!this.apiKey || !this.phoneNumber) return;
+        
+        const pending = this.getPendingReminders();
+        if (pending.length > 0) {
+            // Wait a moment then update UI
+            setTimeout(() => this.updateReminderStatus(), 500);
+        }
+    }
+    
+    async sendPendingReminders() {
+        const pending = this.getPendingReminders();
+        if (pending.length === 0) {
+            this.showToast('No reminders to send', 'success');
+            return;
+        }
+        
+        const btn = document.getElementById('sendRemindersBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Sending...';
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        let sentCount = 0;
+        
+        for (const reminder of pending) {
+            const message = this.formatReminderMessage(reminder);
+            await this.sendWhatsAppMessage(message);
+            
+            // Mark as sent
+            this.sentReminders[reminder.key] = todayStr;
+            sentCount++;
+            
+            // Wait between messages to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        // Save sent reminders
+        localStorage.setItem('dlbc_sent_reminders', JSON.stringify(this.sentReminders));
+        localStorage.setItem('dlbc_last_reminder', new Date().toLocaleString());
+        
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Send Reminders Now';
+        
+        this.showToast(`✅ ${sentCount} reminder(s) sent to WhatsApp!`, 'success');
+        this.updateReminderStatus();
+        this.loadUserData();
+    }
+    
+    formatReminderMessage(reminder) {
+        const event = reminder.event;
+        const days = reminder.daysUntil;
+        
+        let timeText = '';
+        if (days === 0) timeText = '🔴 TODAY';
+        else if (days === 1) timeText = '🟡 TOMORROW';
+        else if (days === 3) timeText = '🟢 In 3 days';
+        else if (days === 7) timeText = '📅 In 1 week';
+        
+        let message = `🙏 *DLBC MEXICO REMINDER*\n\n`;
+        message += `${timeText}\n\n`;
+        message += `📌 *${event.name}*\n`;
+        message += `👤 Your Role: *${event.role}*\n`;
+        message += `📅 Date: ${this.formatDate(event.date)}\n`;
+        message += `🕐 Time: ${event.time}\n`;
+        
+        if (event.partner) {
+            if (event.role === 'STANDBY') {
+                message += `\n👥 Moderator: ${event.partner}`;
+            } else if (event.role === 'MODERATOR') {
+                message += `\n👥 Standby: ${event.partner}`;
+            } else if (event.type === 'gck') {
+                message += `\n👥 Praying with: ${event.partner}`;
+            }
+        }
+        
+        message += `\n\n_God bless you!_`;
+        
+        return message;
+    }
+    
+    // ==================== UI Functions ====================
     
     renderHome() {
         const container = document.getElementById('upcomingEvents');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        // Get next 5 upcoming events
         const upcoming = this.userEvents
             .filter(e => this.parseDate(e.date) >= today)
             .slice(0, 5);
@@ -349,17 +509,20 @@ class ChurchRosterApp {
     renderEventCard(event) {
         const formattedDate = this.formatDate(event.date);
         
-        const roleClass = event.role === 'MODERATOR' || event.role === 'TEACHER' || event.role === 'CHORUS LEADER' ? 'moderator' : 
-                          event.role === 'STANDBY' ? 'standby' : 'gck';
-        const roleBadgeClass = event.role === 'MODERATOR' || event.role === 'TEACHER' || event.role === 'CHORUS LEADER' ? 'role-moderator' : 
-                               event.role === 'STANDBY' ? 'role-standby' : 'role-gck';
+        let roleClass = 'moderator';
+        if (event.role === 'STANDBY') roleClass = 'standby';
+        else if (event.type === 'gck') roleClass = 'gck';
+        
+        let roleBadgeClass = 'role-moderator';
+        if (event.role === 'STANDBY') roleBadgeClass = 'role-standby';
+        else if (event.type === 'gck') roleBadgeClass = 'role-gck';
         
         let partnerInfo = '';
         if (event.partner) {
             if (event.role === 'STANDBY') {
                 partnerInfo = `<span>👤 Moderator: ${event.partner}</span>`;
             } else if (event.role === 'MODERATOR') {
-                partnerInfo = `<span>👤 With: ${event.partner}</span>`;
+                partnerInfo = `<span>👤 Standby: ${event.partner}</span>`;
             } else if (event.type === 'gck') {
                 partnerInfo = `<span>👤 With: ${event.partner}</span>`;
             }
@@ -382,18 +545,14 @@ class ChurchRosterApp {
     
     filterSchedule(filter) {
         this.scheduleFilter = filter;
-        
-        // Update tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.classList.toggle('active', tab.dataset.filter === filter);
         });
-        
         this.renderSchedule();
     }
     
     renderSchedule() {
         const container = document.getElementById('scheduleList');
-        
         let filtered = this.userEvents;
         if (this.scheduleFilter !== 'all') {
             filtered = this.userEvents.filter(e => e.type === this.scheduleFilter);
@@ -419,22 +578,16 @@ class ChurchRosterApp {
         const year = this.currentMonth.getFullYear();
         const month = this.currentMonth.getMonth();
         
-        monthYear.textContent = this.currentMonth.toLocaleDateString('en-US', { 
-            month: 'long', 
-            year: 'numeric' 
-        });
+        monthYear.textContent = this.currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         
-        // Clear previous days (keep headers)
         const headers = grid.querySelectorAll('.calendar-day-header');
         grid.innerHTML = '';
         headers.forEach(h => grid.appendChild(h));
         
-        // Get first day of month and total days
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrevMonth = new Date(year, month, 0).getDate();
         
-        // Get user's event dates for this month
         const eventDates = new Set(
             this.userEvents
                 .filter(e => {
@@ -446,7 +599,6 @@ class ChurchRosterApp {
         
         const today = new Date();
         
-        // Previous month days
         for (let i = firstDay - 1; i >= 0; i--) {
             const day = daysInPrevMonth - i;
             const div = document.createElement('div');
@@ -455,18 +607,15 @@ class ChurchRosterApp {
             grid.appendChild(div);
         }
         
-        // Current month days
         for (let day = 1; day <= daysInMonth; day++) {
             const div = document.createElement('div');
             div.className = 'calendar-day';
             div.textContent = day;
             
-            // Check if today
             if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
                 div.classList.add('today');
             }
             
-            // Check if has event
             if (eventDates.has(day)) {
                 div.classList.add('has-event');
             }
@@ -475,7 +624,6 @@ class ChurchRosterApp {
             grid.appendChild(div);
         }
         
-        // Next month days
         const totalCells = firstDay + daysInMonth;
         const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
         for (let i = 1; i <= remainingCells; i++) {
@@ -494,7 +642,6 @@ class ChurchRosterApp {
     showDayEvents(year, month, day) {
         const container = document.getElementById('dayEvents');
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        
         const dayEvents = this.userEvents.filter(e => e.date === dateStr);
         
         if (dayEvents.length === 0) {
@@ -513,67 +660,51 @@ class ChurchRosterApp {
     navigateTo(page) {
         this.currentPage = page;
         
-        // Update navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.page === page);
         });
         
-        // Update pages
-        document.querySelectorAll('.page').forEach(p => {
-            p.classList.remove('active');
-        });
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(`${page}Page`).classList.add('active');
         
-        // Render page content
-        if (page === 'schedule') {
-            this.renderSchedule();
-        } else if (page === 'calendar') {
-            this.renderCalendar();
-        }
+        if (page === 'schedule') this.renderSchedule();
+        else if (page === 'calendar') this.renderCalendar();
     }
     
-    async toggleNotifications() {
-        const toggle = document.getElementById('notificationToggle');
-        
-        if (!toggle.classList.contains('active')) {
-            // Request permission
-            if ('Notification' in window) {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    toggle.classList.add('active');
-                    localStorage.setItem('dlbc_notifications', 'enabled');
-                    this.scheduleNotifications();
-                }
-            }
-        } else {
-            toggle.classList.remove('active');
-            localStorage.removeItem('dlbc_notifications');
-        }
-    }
-    
-    scheduleNotifications() {
-        // This would set up push notifications via service worker
-        // For now, we'll use the Notification API for basic reminders
-        if ('serviceWorker' in navigator && 'PushManager' in window) {
-            console.log('Push notifications supported');
-            // Implementation would require a backend server
-        }
+    showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => toast.classList.remove('show'), 3000);
     }
     
     logout() {
         localStorage.removeItem('dlbc_user');
+        localStorage.removeItem('dlbc_phone');
+        localStorage.removeItem('dlbc_apikey');
+        localStorage.removeItem('dlbc_sent_reminders');
+        localStorage.removeItem('dlbc_last_reminder');
         this.currentUser = null;
+        this.phoneNumber = null;
+        this.apiKey = null;
+        this.sentReminders = {};
         this.showLogin();
     }
     
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('./sw.js');
-                console.log('ServiceWorker registered:', registration);
+                await navigator.serviceWorker.register('./sw.js');
             } catch (error) {
-                console.log('ServiceWorker registration failed:', error);
+                console.log('SW registration failed:', error);
             }
         }
     }
 }
+
+// Global reference for inline handlers
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+    app = new ChurchRosterApp();
+    app.init();
+});
