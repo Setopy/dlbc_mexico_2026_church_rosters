@@ -2,20 +2,21 @@
   "name": "DLBC Mexico Church Roster",
   "short_name": "DLBC Roster",
   "description": "Deeper Life Bible Church Mexico - Church Roster & Reminders 2026",
-  "start_url": "/index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#F5F5F5",
   "theme_color": "#1565C0",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
