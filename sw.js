@@ -2,12 +2,12 @@
  * Service Worker for Church Roster PWA
  * Provides offline support and push notifications
  * Repository: dlbc_mexico_2026_church_rosters
+ * VERSION 2 - Fixed date display
  */
 
-const CACHE_NAME = 'dlbc-roster-v1';
+const CACHE_NAME = 'dlbc-roster-v2';
 
 // Use relative paths for GitHub Pages subdirectory deployment
-// Works for: https://setopy.github.io/dlbc_mexico_2026_church_rosters/
 const urlsToCache = [
   './',
   './index.html',
@@ -20,7 +20,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installing...');
+  console.log('[ServiceWorker] Installing v2...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -31,7 +31,6 @@ self.addEventListener('install', event => {
         console.error('[ServiceWorker] Cache failed:', err);
       })
   );
-  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
@@ -41,10 +40,8 @@ self.addEventListener('fetch', event => {
     caches.match(event.request)
       .then(response => {
         if (response) {
-          console.log('[ServiceWorker] Serving from cache:', event.request.url);
           return response;
         }
-        console.log('[ServiceWorker] Fetching:', event.request.url);
         return fetch(event.request).catch(err => {
           console.error('[ServiceWorker] Fetch failed:', err);
           throw err;
@@ -55,7 +52,7 @@ self.addEventListener('fetch', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Activating...');
+  console.log('[ServiceWorker] Activating v2...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -68,13 +65,11 @@ self.addEventListener('activate', event => {
       );
     })
   );
-  // Claim any clients immediately
   return self.clients.claim();
 });
 
 // Push notification event
 self.addEventListener('push', event => {
-  console.log('[ServiceWorker] Push received');
   const options = {
     body: event.data ? event.data.text() : 'You have a church event coming up!',
     icon: './icon-192.png',
@@ -97,12 +92,8 @@ self.addEventListener('push', event => {
 
 // Notification click event
 self.addEventListener('notificationclick', event => {
-  console.log('[ServiceWorker] Notification clicked');
   event.notification.close();
-
   if (event.action === 'view') {
-    event.waitUntil(
-      clients.openWindow('./')
-    );
+    event.waitUntil(clients.openWindow('./'));
   }
 });
