@@ -1,6 +1,7 @@
 /**
  * Church Roster PWA - Main Application
  * Deeper Life Bible Church, Mexico
+ * Fixed: Date display timezone issue
  */
 
 class ChurchRosterApp {
@@ -92,7 +93,10 @@ class ChurchRosterApp {
         document.getElementById('currentUserDisplay').textContent = this.currentUser;
         
         // Calculate stats
-        const moderatorEvents = this.userEvents.filter(e => e.role === 'MODERATOR' || e.type === 'gck' || e.type === 'bts' || e.type === 'wednesday');
+        const moderatorEvents = this.userEvents.filter(e => 
+            e.role === 'MODERATOR' || e.role === 'TEACHER' || e.role === 'CHORUS LEADER' || 
+            e.type === 'gck' || e.type === 'bts' || e.type === 'wednesday'
+        );
         const standbyEvents = this.userEvents.filter(e => e.role === 'STANDBY');
         
         document.getElementById('totalEvents').textContent = this.userEvents.length;
@@ -100,10 +104,27 @@ class ChurchRosterApp {
         document.getElementById('standbyCount').textContent = standbyEvents.length;
     }
     
+    // Helper function to parse date string without timezone issues
+    parseDate(dateStr) {
+        // dateStr is in format "YYYY-MM-DD"
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day); // month is 0-indexed
+    }
+    
+    // Helper function to format date for display
+    formatDate(dateStr) {
+        const date = this.parseDate(dateStr);
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+    
     getUserEvents(userName) {
         const events = [];
         
-        // Check Tuesday Bible Study
+        // Check Tuesday Bible Study (Moderator/Standby)
         if (typeof TUESDAY_ROSTER !== 'undefined') {
             TUESDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
@@ -122,6 +143,22 @@ class ChurchRosterApp {
                         type: 'tuesday',
                         role: 'STANDBY',
                         partner: item.moderator,
+                        time: '7:00 PM'
+                    });
+                }
+            });
+        }
+        
+        // Check Tuesday Bible Study (Chorus)
+        if (typeof CHORUS_TBS_ROSTER !== 'undefined') {
+            CHORUS_TBS_ROSTER.forEach(item => {
+                if (item.leader === userName) {
+                    events.push({
+                        date: item.date,
+                        name: 'Tuesday Bible Study',
+                        type: 'tuesday',
+                        role: 'CHORUS LEADER',
+                        partner: null,
                         time: '7:00 PM'
                     });
                 }
@@ -153,7 +190,7 @@ class ChurchRosterApp {
             });
         }
         
-        // Check Friday Revival Hour
+        // Check Friday Revival Hour (Moderator/Standby)
         if (typeof FRIDAY_ROSTER !== 'undefined') {
             FRIDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
@@ -172,6 +209,22 @@ class ChurchRosterApp {
                         type: 'friday',
                         role: 'STANDBY',
                         partner: item.moderator,
+                        time: '7:00 PM'
+                    });
+                }
+            });
+        }
+        
+        // Check Friday Revival Hour (Chorus)
+        if (typeof CHORUS_FRH_ROSTER !== 'undefined') {
+            CHORUS_FRH_ROSTER.forEach(item => {
+                if (item.leader === userName) {
+                    events.push({
+                        date: item.date,
+                        name: 'Friday Revival Hour',
+                        type: 'friday',
+                        role: 'CHORUS LEADER',
+                        partner: null,
                         time: '7:00 PM'
                     });
                 }
@@ -210,7 +263,7 @@ class ChurchRosterApp {
                         date: item.date,
                         name: "Children's BTS",
                         type: 'bts',
-                        role: 'MODERATOR',
+                        role: 'TEACHER',
                         partner: null,
                         time: '4:30 PM'
                     });
@@ -235,23 +288,35 @@ class ChurchRosterApp {
         }
         
         // Sort by date
-        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        events.sort((a, b) => {
+            const dateA = this.parseDate(a.date);
+            const dateB = this.parseDate(b.date);
+            return dateA - dateB;
+        });
         
         return events;
     }
     
     getAllWeekdaysIn2026(weekday) {
         const dates = [];
-        let d = new Date(2026, 0, 1);
+        // JavaScript: 0=Sunday, 1=Monday, ..., 6=Saturday
+        // Our data: 0=Monday, 1=Tuesday, ..., 6=Sunday
+        // Convert: our 6 (Sunday) = JS 0, our 0 (Monday) = JS 1, etc.
+        const jsWeekday = weekday === 6 ? 0 : weekday + 1;
         
-        // Find first occurrence
-        while (d.getDay() !== (weekday === 6 ? 0 : weekday + 1)) {
+        let d = new Date(2026, 0, 1); // January 1, 2026
+        
+        // Find first occurrence of this weekday
+        while (d.getDay() !== jsWeekday) {
             d.setDate(d.getDate() + 1);
         }
         
-        // Collect all occurrences
+        // Collect all occurrences in 2026
         while (d.getFullYear() === 2026) {
-            dates.push(d.toISOString().split('T')[0]);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            dates.push(`${year}-${month}-${day}`);
             d.setDate(d.getDate() + 7);
         }
         
@@ -265,7 +330,7 @@ class ChurchRosterApp {
         
         // Get next 5 upcoming events
         const upcoming = this.userEvents
-            .filter(e => new Date(e.date) >= today)
+            .filter(e => this.parseDate(e.date) >= today)
             .slice(0, 5);
         
         if (upcoming.length === 0) {
@@ -282,19 +347,23 @@ class ChurchRosterApp {
     }
     
     renderEventCard(event) {
-        const date = new Date(event.date);
-        const formattedDate = date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-        });
+        const formattedDate = this.formatDate(event.date);
         
-        const roleClass = event.role === 'MODERATOR' ? 'moderator' : 
+        const roleClass = event.role === 'MODERATOR' || event.role === 'TEACHER' || event.role === 'CHORUS LEADER' ? 'moderator' : 
                           event.role === 'STANDBY' ? 'standby' : 'gck';
-        const roleBadgeClass = event.role === 'MODERATOR' ? 'role-moderator' : 
+        const roleBadgeClass = event.role === 'MODERATOR' || event.role === 'TEACHER' || event.role === 'CHORUS LEADER' ? 'role-moderator' : 
                                event.role === 'STANDBY' ? 'role-standby' : 'role-gck';
         
-        const partnerInfo = event.partner ? `<span>👤 ${event.role === 'STANDBY' ? 'Moderator' : 'With'}: ${event.partner}</span>` : '';
+        let partnerInfo = '';
+        if (event.partner) {
+            if (event.role === 'STANDBY') {
+                partnerInfo = `<span>👤 Moderator: ${event.partner}</span>`;
+            } else if (event.role === 'MODERATOR') {
+                partnerInfo = `<span>👤 With: ${event.partner}</span>`;
+            } else if (event.type === 'gck') {
+                partnerInfo = `<span>👤 With: ${event.partner}</span>`;
+            }
+        }
         
         return `
             <div class="event-card ${roleClass}">
@@ -369,10 +438,10 @@ class ChurchRosterApp {
         const eventDates = new Set(
             this.userEvents
                 .filter(e => {
-                    const d = new Date(e.date);
+                    const d = this.parseDate(e.date);
                     return d.getMonth() === month && d.getFullYear() === year;
                 })
-                .map(e => new Date(e.date).getDate())
+                .map(e => this.parseDate(e.date).getDate())
         );
         
         const today = new Date();
@@ -500,7 +569,7 @@ class ChurchRosterApp {
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('sw.js');
+                const registration = await navigator.serviceWorker.register('./sw.js');
                 console.log('ServiceWorker registered:', registration);
             } catch (error) {
                 console.log('ServiceWorker registration failed:', error);
