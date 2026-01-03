@@ -1,10 +1,10 @@
 /**
  * Church Roster Schedule Data
  * Deeper Life Bible Church, Mexico - 2026
- * Auto-generated
+ * Auto-generated - FIXED VERSION
  */
 
-// Tuesday Bible Study Roster
+// Tuesday Bible Study Roster (Moderator/Standby)
 const TUESDAY_ROSTER = [
   {
     "date": "2026-01-06",
@@ -537,7 +537,7 @@ const THURSDAY_ROSTER = [
   }
 ];
 
-// Friday Revival Hour Roster
+// Friday Revival Hour Roster (Moderator/Standby)
 const FRIDAY_ROSTER = [
   {
     "date": "2026-01-02",
@@ -798,6 +798,430 @@ const FRIDAY_ROSTER = [
     "date": "2026-12-25",
     "moderator": "Bro Mathew",
     "standby": "Bro Ayodele"
+  }
+];
+
+// Chorus Leaders - Tuesday Bible Study
+const CHORUS_TBS_ROSTER = [
+  {
+    "date": "2026-01-06",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-01-13",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-01-20",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-01-27",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-02-03",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-02-10",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-02-17",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-02-24",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-03-03",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-03-10",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-03-17",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-03-24",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-03-31",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-04-07",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-04-14",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-04-21",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-04-28",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-05-05",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-05-12",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-05-19",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-05-26",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-06-02",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-06-09",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-06-16",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-06-23",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-06-30",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-07-07",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-07-14",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-07-21",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-07-28",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-08-04",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-08-11",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-08-18",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-08-25",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-09-01",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-09-08",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-09-15",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-09-22",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-09-29",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-10-06",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-10-13",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-10-20",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-10-27",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-11-03",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-11-10",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-11-17",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-11-24",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-12-01",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-12-08",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-12-15",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-12-22",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-12-29",
+    "leader": "Sister Nupo Abosede"
+  }
+];
+
+// Chorus Leaders - Friday Revival Hour
+const CHORUS_FRH_ROSTER = [
+  {
+    "date": "2026-01-02",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-01-09",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-01-16",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-01-23",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-01-30",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-02-06",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-02-13",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-02-20",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-02-27",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-03-06",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-03-13",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-03-20",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-03-27",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-04-03",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-04-10",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-04-17",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-04-24",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-05-01",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-05-08",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-05-15",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-05-22",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-05-29",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-06-05",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-06-12",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-06-19",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-06-26",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-07-03",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-07-10",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-07-17",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-07-24",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-07-31",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-08-07",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-08-14",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-08-21",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-08-28",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-09-04",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-09-11",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-09-18",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-09-25",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-10-02",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-10-09",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-10-16",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-10-23",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-10-30",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-11-06",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-11-13",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-11-20",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-11-27",
+    "leader": "Sister Ruth Faleye"
+  },
+  {
+    "date": "2026-12-04",
+    "leader": "Sister Adebimpe"
+  },
+  {
+    "date": "2026-12-11",
+    "leader": "Sister Nupo Abosede"
+  },
+  {
+    "date": "2026-12-18",
+    "leader": "Mummy Jairus"
+  },
+  {
+    "date": "2026-12-25",
+    "leader": "Sister Ruth Faleye"
   }
 ];
 
