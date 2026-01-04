@@ -1,7 +1,7 @@
 {
   "name": "DLBC Mexico Church Roster",
   "short_name": "DLBC Roster",
-  "description": "Deeper Life Bible Church Mexico - Church Roster & Reminders 2026",
+  "description": "Church Roster & WhatsApp Reminders - Deeper Life Bible Church Mexico",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -21,8 +21,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["lifestyle", "utilities"],
-  "lang": "en",
-  "dir": "ltr"
+  ]
 }
