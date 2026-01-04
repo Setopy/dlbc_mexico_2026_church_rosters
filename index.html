@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1565C0">
-    <meta name="description" content="Deeper Life Bible Church Mexico - Church Roster & Reminders">
+    <meta name="description" content="Deeper Life Bible Church Mexico - Church Roster & WhatsApp Reminders">
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
@@ -27,11 +27,13 @@
             --primary-dark: #0D47A1;
             --secondary: #2E7D32;
             --accent: #FF6F00;
+            --whatsapp: #25D366;
             --background: #F5F5F5;
             --card: #FFFFFF;
             --text: #212121;
             --text-light: #757575;
             --border: #E0E0E0;
+            --danger: #D32F2F;
         }
         
         body {
@@ -39,13 +41,14 @@
             background: var(--background);
             color: var(--text);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
         /* Header */
         .header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
             position: sticky;
             top: 0;
@@ -54,12 +57,12 @@
         }
         
         .header h1 {
-            font-size: 1.3rem;
-            margin-bottom: 5px;
+            font-size: 1.2rem;
+            margin-bottom: 3px;
         }
         
         .header p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             opacity: 0.9;
         }
         
@@ -69,14 +72,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: calc(100vh - 100px);
+            min-height: calc(100vh - 80px);
             padding: 20px;
         }
         
         .login-card {
             background: var(--card);
             border-radius: 16px;
-            padding: 30px;
+            padding: 25px;
             width: 100%;
             max-width: 400px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
@@ -84,42 +87,56 @@
         
         .login-card h2 {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: var(--primary);
+            font-size: 1.4rem;
         }
         
-        .login-card p {
+        .login-card > p {
             text-align: center;
             color: var(--text-light);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
             font-size: 0.9rem;
         }
         
-        .member-select {
+        .member-select, .api-input {
             width: 100%;
-            padding: 15px;
+            padding: 12px 15px;
             font-size: 1rem;
             border: 2px solid var(--border);
             border-radius: 10px;
-            margin-bottom: 20px;
             background: white;
-            cursor: pointer;
         }
         
-        .member-select:focus {
+        .member-select:focus, .api-input:focus {
             outline: none;
             border-color: var(--primary);
         }
         
         .btn {
             width: 100%;
-            padding: 15px;
+            padding: 14px;
             font-size: 1rem;
             font-weight: 600;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         
         .btn-primary {
@@ -131,9 +148,76 @@
             background: var(--primary-dark);
         }
         
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-whatsapp {
+            background: var(--whatsapp);
+            color: white;
+        }
+        
+        .btn-whatsapp:hover {
+            background: #1da851;
+        }
+        
         .btn-secondary {
             background: var(--secondary);
             color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            width: auto;
+        }
+        
+        /* Setup Instructions */
+        .setup-instructions {
+            background: #E3F2FD;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .setup-instructions h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .setup-instructions ol {
+            padding-left: 20px;
+        }
+        
+        .setup-instructions li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .setup-instructions code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .phone-number {
+            font-weight: bold;
+            color: var(--primary);
         }
         
         /* Main App */
@@ -156,13 +240,69 @@
         }
         
         .welcome-banner h2 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 5px;
         }
         
         .welcome-banner p {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             opacity: 0.9;
+        }
+        
+        /* Reminder Card */
+        .reminder-card {
+            background: var(--card);
+            margin: 15px;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .reminder-card h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .reminder-status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .reminder-status.pending {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        
+        .reminder-status.sent {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .reminder-status.none {
+            background: #F5F5F5;
+            color: #757575;
+        }
+        
+        .upcoming-reminder {
+            background: #F5F5F5;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .upcoming-reminder .event-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .upcoming-reminder .event-details {
+            font-size: 0.85rem;
+            color: var(--text-light);
         }
         
         /* Stats Cards */
@@ -171,27 +311,27 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             padding: 0 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .stat-card {
             background: var(--card);
             border-radius: 12px;
-            padding: 15px 10px;
+            padding: 12px 8px;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         
         .stat-number {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--primary);
         }
         
         .stat-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-light);
-            margin-top: 5px;
+            margin-top: 3px;
         }
         
         /* Section */
@@ -200,9 +340,9 @@
         }
         
         .section-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -213,12 +353,12 @@
             background: var(--card);
             border-radius: 12px;
             padding: 15px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border-left: 4px solid var(--primary);
         }
         
-        .event-card.moderator {
+        .event-card.moderator, .event-card.teacher, .event-card.chorus {
             border-left-color: var(--secondary);
         }
         
@@ -234,22 +374,22 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .event-name {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
         
         .event-role {
-            font-size: 0.75rem;
-            padding: 4px 10px;
+            font-size: 0.7rem;
+            padding: 3px 8px;
             border-radius: 20px;
             font-weight: 600;
         }
         
-        .role-moderator {
+        .role-moderator, .role-teacher, .role-chorus {
             background: #E8F5E9;
             color: var(--secondary);
         }
@@ -266,15 +406,16 @@
         
         .event-details {
             display: flex;
-            gap: 15px;
-            font-size: 0.85rem;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.8rem;
             color: var(--text-light);
         }
         
         .event-details span {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
         
         /* Tabs */
@@ -283,13 +424,13 @@
             padding: 0 15px;
             margin-bottom: 10px;
             overflow-x: auto;
-            gap: 8px;
+            gap: 6px;
         }
         
         .tab {
-            padding: 10px 16px;
+            padding: 8px 14px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
             cursor: pointer;
             white-space: nowrap;
@@ -313,7 +454,7 @@
             background: var(--card);
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
+            padding: 8px 0;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 100;
         }
@@ -322,8 +463,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 8px 16px;
+            gap: 3px;
+            padding: 6px 12px;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -335,84 +476,14 @@
             background: rgba(21, 101, 192, 0.1);
         }
         
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+        
         .nav-item span {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 500;
-        }
-        
-        /* Calendar View */
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-        }
-        
-        .calendar-nav {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .calendar-nav button {
-            background: var(--card);
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .month-year {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            padding: 0 15px;
-        }
-        
-        .calendar-day-header {
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-light);
-            padding: 10px 0;
-        }
-        
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--card);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .calendar-day.today {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .calendar-day.has-event::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--secondary);
-            border-radius: 50%;
-            position: absolute;
-            bottom: 5px;
-        }
-        
-        .calendar-day.other-month {
-            color: var(--text-light);
-            opacity: 0.5;
         }
         
         /* Settings */
@@ -428,6 +499,7 @@
         
         .settings-label {
             font-weight: 500;
+            font-size: 0.95rem;
         }
         
         .settings-desc {
@@ -435,52 +507,53 @@
             color: var(--text-light);
         }
         
-        .toggle {
-            width: 50px;
-            height: 28px;
-            background: var(--border);
-            border-radius: 14px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .api-key-display {
+            font-family: monospace;
+            background: #F5F5F5;
+            padding: 2px 8px;
+            border-radius: 4px;
         }
         
-        .toggle.active {
-            background: var(--primary);
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 90%;
+            text-align: center;
         }
         
-        .toggle::after {
-            content: '';
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        .toast.show {
+            opacity: 1;
         }
         
-        .toggle.active::after {
-            left: 24px;
+        .toast.success {
+            background: var(--secondary);
+        }
+        
+        .toast.error {
+            background: var(--danger);
         }
         
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             color: var(--text-light);
         }
         
         .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-        
-        /* Hidden */
-        .hidden {
-            display: none !important;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
         }
         
         /* Page Views */
@@ -491,32 +564,169 @@
         .page.active {
             display: block;
         }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* WhatsApp Badge */
+        .whatsapp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--whatsapp);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* Calendar styles */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .calendar-nav button {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .month-year {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            padding: 0 15px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-light);
+            padding: 8px 0;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--card);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .calendar-day.today {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .calendar-day.has-event::after {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background: var(--secondary);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 4px;
+        }
+        
+        .calendar-day.other-month {
+            color: var(--text-light);
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+    
+    <!-- Login/Setup Screen -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
             <h2>🙏 Welcome</h2>
-            <p>Deeper Life Bible Church, Mexico<br>Church Roster & Reminders</p>
+            <p>Deeper Life Bible Church, Mexico<br>Church Roster & WhatsApp Reminders</p>
             
-            <select id="memberSelect" class="member-select">
-                <option value="">-- Select Your Name --</option>
-                <option value="Pastor Nupo">Pastor Nupo</option>
-                <option value="Pastor Samuel">Pastor Samuel</option>
-                <option value="Bro Ayodele">Bro Ayodele</option>
-                <option value="Bro Mathew">Bro Mathew</option>
-                <option value="Bro Seyi">Bro Seyi</option>
-                <option value="Sister Success">Sister Success</option>
-                <option value="Sister Adebimpe">Sister Adebimpe</option>
-                <option value="Sister Ruth Faleye">Sister Ruth Faleye</option>
-                <option value="Sister Nupo Abosede">Sister Nupo Abosede</option>
-                <option value="National Pastor">National Pastor</option>
-                <option value="Mummy Jairus">Mummy Jairus</option>
-                <option value="Sister Kayode">Sister Kayode</option>
-            </select>
+            <div class="setup-instructions">
+                <h3>📱 Setup WhatsApp Reminders (One Time)</h3>
+                <ol>
+                    <li>Save this number to your contacts:<br><span class="phone-number">+34 623 78 95 80</span></li>
+                    <li>Send this WhatsApp message to that number:<br><code>I allow callmebot to send me messages</code></li>
+                    <li>You'll receive your <strong>API Key</strong> (a number like 123456)</li>
+                    <li>Enter that API Key below</li>
+                </ol>
+            </div>
             
-            <button id="loginBtn" class="btn btn-primary">Continue</button>
+            <div class="form-group">
+                <label>Select Your Name</label>
+                <select id="memberSelect" class="member-select">
+                    <option value="">-- Select Your Name --</option>
+                    <option value="Pastor Nupo">Pastor Nupo</option>
+                    <option value="Pastor Samuel">Pastor Samuel</option>
+                    <option value="Bro Ayodele">Bro Ayodele</option>
+                    <option value="Bro Mathew">Bro Mathew</option>
+                    <option value="Bro Seyi">Bro Seyi</option>
+                    <option value="Sister Success">Sister Success</option>
+                    <option value="Sister Adebimpe">Sister Adebimpe</option>
+                    <option value="Sister Ruth Faleye">Sister Ruth Faleye</option>
+                    <option value="Sister Nupo Abosede">Sister Nupo Abosede</option>
+                    <option value="National Pastor">National Pastor</option>
+                    <option value="Mummy Jairus">Mummy Jairus</option>
+                    <option value="Sister Kayode">Sister Kayode</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Your Phone Number (with country code)</label>
+                <input type="tel" id="phoneInput" class="api-input" placeholder="+521234567890">
+            </div>
+            
+            <div class="form-group">
+                <label>Your Callmebot API Key</label>
+                <input type="text" id="apiKeyInput" class="api-input" placeholder="Enter your API key (e.g., 123456)">
+            </div>
+            
+            <button id="loginBtn" class="btn btn-whatsapp" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                Continue with WhatsApp Reminders
+            </button>
+            
+            <p style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-light);">
+                <a href="#" id="skipSetup" style="color: var(--primary);">Skip WhatsApp setup →</a>
+            </p>
         </div>
     </div>
     
@@ -530,9 +740,34 @@
         
         <!-- Home Page -->
         <div id="homePage" class="page active">
-            <div id="welcomeBanner" class="welcome-banner">
-                <h2>Welcome, <span id="userName">Member</span>! 👋</h2>
-                <p>Here's your schedule overview</p>
+            <div class="welcome-banner">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Welcome, <span id="userName">Member</span>! 👋</h2>
+                        <p>Here's your schedule overview</p>
+                    </div>
+                    <div id="whatsappBadge" class="whatsapp-badge" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        WhatsApp
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reminder Card -->
+            <div class="reminder-card">
+                <h3>📲 WhatsApp Reminders</h3>
+                <div id="reminderStatus" class="reminder-status none">
+                    Loading...
+                </div>
+                <div id="upcomingReminders"></div>
+                <button id="sendRemindersBtn" class="btn btn-whatsapp" style="margin-top: 10px; display: none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                    Send Reminders Now
+                </button>
             </div>
             
             <div class="stats-row">
@@ -542,7 +777,7 @@
                 </div>
                 <div class="stat-card">
                     <div id="moderatorCount" class="stat-number">0</div>
-                    <div class="stat-label">As Moderator</div>
+                    <div class="stat-label">As Leader</div>
                 </div>
                 <div class="stat-card">
                     <div id="standbyCount" class="stat-number">0</div>
@@ -611,24 +846,43 @@
                 
                 <div class="settings-item">
                     <div>
-                        <div class="settings-label">Push Notifications</div>
-                        <div class="settings-desc">Get reminders on your device</div>
+                        <div class="settings-label">Current User</div>
+                        <div id="currentUserDisplay" class="settings-desc">Not logged in</div>
                     </div>
-                    <div id="notificationToggle" class="toggle"></div>
                 </div>
                 
                 <div class="settings-item">
                     <div>
-                        <div class="settings-label">Current User</div>
-                        <div id="currentUserDisplay" class="settings-desc">Not logged in</div>
+                        <div class="settings-label">Phone Number</div>
+                        <div id="currentPhoneDisplay" class="settings-desc">Not set</div>
                     </div>
-                    <button id="logoutBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px;">Change</button>
+                </div>
+                
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">WhatsApp API Key</div>
+                        <div id="currentApiKeyDisplay" class="settings-desc">Not set</div>
+                    </div>
+                    <button id="testWhatsappBtn" class="btn btn-small btn-whatsapp">Test</button>
+                </div>
+                
+                <div class="settings-item">
+                    <div>
+                        <div class="settings-label">Last Reminder Sent</div>
+                        <div id="lastReminderDisplay" class="settings-desc">Never</div>
+                    </div>
+                </div>
+                
+                <div style="padding: 15px;">
+                    <button id="logoutBtn" class="btn btn-danger">
+                        Logout & Reset
+                    </button>
                 </div>
                 
                 <div class="settings-item">
                     <div>
                         <div class="settings-label">App Version</div>
-                        <div class="settings-desc">1.0.0 - January 2026</div>
+                        <div class="settings-desc">2.0.0 - WhatsApp Edition</div>
                     </div>
                 </div>
             </div>
@@ -637,25 +891,25 @@
         <!-- Bottom Navigation -->
         <div class="bottom-nav">
             <div class="nav-item active" data-page="home">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 </svg>
                 <span>Home</span>
             </div>
             <div class="nav-item" data-page="schedule">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
                 </svg>
                 <span>Schedule</span>
             </div>
             <div class="nav-item" data-page="calendar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
                 </svg>
                 <span>Calendar</span>
             </div>
             <div class="nav-item" data-page="settings">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
                 </svg>
                 <span>Settings</span>
@@ -663,10 +917,9 @@
         </div>
     </div>
     
-    <script src="app.js"></script>
     <script src="schedules.js"></script>
+    <script src="app.js"></script>
     <script>
-        // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             const app = new ChurchRosterApp();
             app.init();
