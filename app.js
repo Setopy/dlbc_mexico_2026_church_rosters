@@ -1,118 +1,62 @@
 /**
- * Church Roster PWA with WhatsApp Reminders
- * Deeper Life Bible Church, Mexico
- * Using Callmebot Free API
+ * Church Roster PWA - Simple Version
+ * Deeper Life Bible Church, Mexico - 2026
  */
 
 class ChurchRosterApp {
     constructor() {
         this.currentUser = null;
-        this.phoneNumber = null;
-        this.apiKey = null;
         this.currentPage = 'home';
         this.currentMonth = new Date(2026, 0, 1);
         this.scheduleFilter = 'all';
         this.userEvents = [];
-        this.sentReminders = {};
     }
     
     init() {
-        // Load saved data
-        this.currentUser = localStorage.getItem('dlbc_user');
-        this.phoneNumber = localStorage.getItem('dlbc_phone');
-        this.apiKey = localStorage.getItem('dlbc_apikey');
-        this.sentReminders = JSON.parse(localStorage.getItem('dlbc_sent_reminders') || '{}');
-        
-        if (this.currentUser) {
+        const savedUser = localStorage.getItem('dlbc_user');
+        if (savedUser) {
+            this.currentUser = savedUser;
             this.showApp();
         } else {
             this.showLogin();
         }
-        
         this.setupEventListeners();
         this.registerServiceWorker();
     }
     
     setupEventListeners() {
-        // Login form
         const memberSelect = document.getElementById('memberSelect');
-        const phoneInput = document.getElementById('phoneInput');
-        const apiKeyInput = document.getElementById('apiKeyInput');
         const loginBtn = document.getElementById('loginBtn');
         
-        const validateForm = () => {
-            const hasName = memberSelect.value !== '';
-            const hasPhone = phoneInput.value.length >= 10;
-            const hasKey = apiKeyInput.value.length >= 4;
-            loginBtn.disabled = !(hasName && hasPhone && hasKey);
-        };
-        
-        memberSelect.addEventListener('change', validateForm);
-        phoneInput.addEventListener('input', validateForm);
-        apiKeyInput.addEventListener('input', validateForm);
+        memberSelect.addEventListener('change', (e) => {
+            loginBtn.disabled = !e.target.value;
+        });
         
         loginBtn.addEventListener('click', () => this.handleLogin());
         
-        document.getElementById('skipSetup').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (memberSelect.value) {
-                this.currentUser = memberSelect.value;
-                localStorage.setItem('dlbc_user', this.currentUser);
-                this.showApp();
-            } else {
-                this.showToast('Please select your name first', 'error');
-            }
-        });
-        
-        // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                const page = e.currentTarget.dataset.page;
-                this.navigateTo(page);
+                this.navigateTo(e.currentTarget.dataset.page);
             });
         });
         
-        // Tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
-                const filter = e.target.dataset.filter;
-                this.filterSchedule(filter);
+                this.filterSchedule(e.target.dataset.filter);
             });
         });
         
-        // Calendar
         document.getElementById('prevMonth').addEventListener('click', () => this.changeMonth(-1));
         document.getElementById('nextMonth').addEventListener('click', () => this.changeMonth(1));
-        
-        // Reminder button
-        document.getElementById('sendRemindersBtn').addEventListener('click', () => this.sendPendingReminders());
-        
-        // Settings
-        document.getElementById('testWhatsappBtn').addEventListener('click', () => this.testWhatsApp());
         document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
     }
     
     handleLogin() {
         this.currentUser = document.getElementById('memberSelect').value;
-        this.phoneNumber = document.getElementById('phoneInput').value.replace(/\s/g, '');
-        this.apiKey = document.getElementById('apiKeyInput').value.trim();
-        
-        // Ensure phone has + prefix
-        if (!this.phoneNumber.startsWith('+')) {
-            this.phoneNumber = '+' + this.phoneNumber;
+        if (this.currentUser) {
+            localStorage.setItem('dlbc_user', this.currentUser);
+            this.showApp();
         }
-        
-        // Save to localStorage
-        localStorage.setItem('dlbc_user', this.currentUser);
-        localStorage.setItem('dlbc_phone', this.phoneNumber);
-        localStorage.setItem('dlbc_apikey', this.apiKey);
-        
-        this.showApp();
-        
-        // Send welcome message
-        setTimeout(() => {
-            this.sendWhatsAppMessage(`🙏 Welcome to DLBC Mexico Roster!\n\nHello ${this.currentUser.split(' ')[0]}, your WhatsApp reminders are now active.\n\nYou will receive reminders for your church activities.\n\nGod bless you!`);
-        }, 1000);
     }
     
     showLogin() {
@@ -123,36 +67,17 @@ class ChurchRosterApp {
     showApp() {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('appContainer').classList.add('active');
-        
         this.loadUserData();
         this.renderHome();
         this.renderCalendar();
-        this.updateReminderStatus();
-        this.checkAndSendReminders();
     }
     
     loadUserData() {
         this.userEvents = this.getUserEvents(this.currentUser);
         
-        // Update UI
         document.getElementById('userName').textContent = this.currentUser.split(' ')[0];
         document.getElementById('currentUserDisplay').textContent = this.currentUser;
-        document.getElementById('currentPhoneDisplay').textContent = this.phoneNumber || 'Not set';
-        document.getElementById('currentApiKeyDisplay').textContent = this.apiKey ? '••••' + this.apiKey.slice(-2) : 'Not set';
         
-        // Show WhatsApp badge if configured
-        const badge = document.getElementById('whatsappBadge');
-        if (this.apiKey && this.phoneNumber) {
-            badge.style.display = 'flex';
-        } else {
-            badge.style.display = 'none';
-        }
-        
-        // Last reminder
-        const lastSent = localStorage.getItem('dlbc_last_reminder');
-        document.getElementById('lastReminderDisplay').textContent = lastSent || 'Never';
-        
-        // Stats
         const leaderEvents = this.userEvents.filter(e => 
             ['MODERATOR', 'TEACHER', 'CHORUS LEADER', 'PRAYER'].includes(e.role)
         );
@@ -170,17 +95,13 @@ class ChurchRosterApp {
     
     formatDate(dateStr) {
         const date = this.parseDate(dateStr);
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-        });
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
     
     getUserEvents(userName) {
         const events = [];
         
-        // Tuesday Bible Study (Moderator/Standby)
+        // Tuesday Bible Study
         if (typeof TUESDAY_ROSTER !== 'undefined') {
             TUESDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
@@ -200,7 +121,7 @@ class ChurchRosterApp {
             });
         }
         
-        // Thursday Prayer Meeting
+        // Thursday Prayer
         if (typeof THURSDAY_ROSTER !== 'undefined') {
             THURSDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
@@ -211,7 +132,7 @@ class ChurchRosterApp {
             });
         }
         
-        // Friday Revival Hour (Moderator/Standby)
+        // Friday Revival Hour
         if (typeof FRIDAY_ROSTER !== 'undefined') {
             FRIDAY_ROSTER.forEach(item => {
                 if (item.moderator === userName) {
@@ -242,7 +163,7 @@ class ChurchRosterApp {
                     dates.forEach(date => {
                         events.push({
                             date: date,
-                            name: `GCK Prayer Day - ${dayNames[dayNum]}`,
+                            name: `GCK Prayer - ${dayNames[dayNum]}`,
                             type: 'gck',
                             role: 'PRAYER',
                             partner: partners.length > 0 ? partners.join(', ') : null,
@@ -271,7 +192,6 @@ class ChurchRosterApp {
             });
         }
         
-        // Sort by date
         events.sort((a, b) => this.parseDate(a.date) - this.parseDate(b.date));
         return events;
     }
@@ -291,219 +211,19 @@ class ChurchRosterApp {
         return dates;
     }
     
-    // ==================== WhatsApp Functions ====================
-    
-    async sendWhatsAppMessage(message) {
-        if (!this.phoneNumber || !this.apiKey) {
-            console.log('WhatsApp not configured');
-            return false;
-        }
-        
-        try {
-            const encodedMessage = encodeURIComponent(message);
-            const url = `https://api.callmebot.com/whatsapp.php?phone=${this.phoneNumber}&text=${encodedMessage}&apikey=${this.apiKey}`;
-            
-            // Use image to bypass CORS (callmebot trick)
-            const img = new Image();
-            img.src = url;
-            
-            console.log('WhatsApp message sent:', message.substring(0, 50) + '...');
-            return true;
-        } catch (error) {
-            console.error('WhatsApp error:', error);
-            return false;
-        }
-    }
-    
-    async testWhatsApp() {
-        if (!this.phoneNumber || !this.apiKey) {
-            this.showToast('Please set up WhatsApp first', 'error');
-            return;
-        }
-        
-        this.showToast('Sending test message...', 'success');
-        const success = await this.sendWhatsAppMessage(`✅ Test from DLBC Roster App\n\nYour WhatsApp reminders are working!\n\nTime: ${new Date().toLocaleString()}`);
-        
-        if (success) {
-            this.showToast('Test message sent! Check WhatsApp', 'success');
-        }
-    }
-    
-    getPendingReminders() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const reminders = [];
-        const todayStr = today.toISOString().split('T')[0];
-        
-        this.userEvents.forEach(event => {
-            const eventDate = this.parseDate(event.date);
-            const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
-            
-            // Check for reminders: 7 days, 3 days, 1 day, same day
-            const reminderDays = [7, 3, 1, 0];
-            
-            reminderDays.forEach(days => {
-                if (diffDays === days) {
-                    const reminderKey = `${event.date}-${event.name}-${event.role}-${days}`;
-                    const sentToday = this.sentReminders[reminderKey] === todayStr;
-                    
-                    if (!sentToday) {
-                        reminders.push({
-                            event: event,
-                            daysUntil: days,
-                            key: reminderKey
-                        });
-                    }
-                }
-            });
-        });
-        
-        return reminders;
-    }
-    
-    updateReminderStatus() {
-        const pending = this.getPendingReminders();
-        const statusDiv = document.getElementById('reminderStatus');
-        const remindersDiv = document.getElementById('upcomingReminders');
-        const sendBtn = document.getElementById('sendRemindersBtn');
-        
-        if (!this.apiKey || !this.phoneNumber) {
-            statusDiv.className = 'reminder-status none';
-            statusDiv.innerHTML = '⚠️ WhatsApp not set up. <a href="#" onclick="app.logout();return false;">Set up now</a>';
-            remindersDiv.innerHTML = '';
-            sendBtn.style.display = 'none';
-            return;
-        }
-        
-        if (pending.length === 0) {
-            statusDiv.className = 'reminder-status sent';
-            statusDiv.innerHTML = '✅ All reminders sent! No pending reminders.';
-            remindersDiv.innerHTML = '';
-            sendBtn.style.display = 'none';
-        } else {
-            statusDiv.className = 'reminder-status pending';
-            statusDiv.innerHTML = `📬 ${pending.length} reminder(s) ready to send`;
-            
-            remindersDiv.innerHTML = pending.slice(0, 3).map(r => {
-                const daysText = r.daysUntil === 0 ? 'TODAY' : 
-                                 r.daysUntil === 1 ? 'Tomorrow' : 
-                                 `In ${r.daysUntil} days`;
-                return `
-                    <div class="upcoming-reminder">
-                        <div class="event-name">${r.event.name} - ${r.event.role}</div>
-                        <div class="event-details">${daysText} • ${this.formatDate(r.event.date)}</div>
-                    </div>
-                `;
-            }).join('');
-            
-            sendBtn.style.display = 'flex';
-        }
-    }
-    
-    async checkAndSendReminders() {
-        // Auto-send reminders when app opens
-        if (!this.apiKey || !this.phoneNumber) return;
-        
-        const pending = this.getPendingReminders();
-        if (pending.length > 0) {
-            // Wait a moment then update UI
-            setTimeout(() => this.updateReminderStatus(), 500);
-        }
-    }
-    
-    async sendPendingReminders() {
-        const pending = this.getPendingReminders();
-        if (pending.length === 0) {
-            this.showToast('No reminders to send', 'success');
-            return;
-        }
-        
-        const btn = document.getElementById('sendRemindersBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<div class="spinner"></div> Sending...';
-        
-        const todayStr = new Date().toISOString().split('T')[0];
-        let sentCount = 0;
-        
-        for (const reminder of pending) {
-            const message = this.formatReminderMessage(reminder);
-            await this.sendWhatsAppMessage(message);
-            
-            // Mark as sent
-            this.sentReminders[reminder.key] = todayStr;
-            sentCount++;
-            
-            // Wait between messages to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        // Save sent reminders
-        localStorage.setItem('dlbc_sent_reminders', JSON.stringify(this.sentReminders));
-        localStorage.setItem('dlbc_last_reminder', new Date().toLocaleString());
-        
-        btn.disabled = false;
-        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Send Reminders Now';
-        
-        this.showToast(`✅ ${sentCount} reminder(s) sent to WhatsApp!`, 'success');
-        this.updateReminderStatus();
-        this.loadUserData();
-    }
-    
-    formatReminderMessage(reminder) {
-        const event = reminder.event;
-        const days = reminder.daysUntil;
-        
-        let timeText = '';
-        if (days === 0) timeText = '🔴 TODAY';
-        else if (days === 1) timeText = '🟡 TOMORROW';
-        else if (days === 3) timeText = '🟢 In 3 days';
-        else if (days === 7) timeText = '📅 In 1 week';
-        
-        let message = `🙏 *DLBC MEXICO REMINDER*\n\n`;
-        message += `${timeText}\n\n`;
-        message += `📌 *${event.name}*\n`;
-        message += `👤 Your Role: *${event.role}*\n`;
-        message += `📅 Date: ${this.formatDate(event.date)}\n`;
-        message += `🕐 Time: ${event.time}\n`;
-        
-        if (event.partner) {
-            if (event.role === 'STANDBY') {
-                message += `\n👥 Moderator: ${event.partner}`;
-            } else if (event.role === 'MODERATOR') {
-                message += `\n👥 Standby: ${event.partner}`;
-            } else if (event.type === 'gck') {
-                message += `\n👥 Praying with: ${event.partner}`;
-            }
-        }
-        
-        message += `\n\n_God bless you!_`;
-        
-        return message;
-    }
-    
-    // ==================== UI Functions ====================
-    
     renderHome() {
         const container = document.getElementById('upcomingEvents');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const upcoming = this.userEvents
-            .filter(e => this.parseDate(e.date) >= today)
-            .slice(0, 5);
+        const upcoming = this.userEvents.filter(e => this.parseDate(e.date) >= today).slice(0, 5);
         
         if (upcoming.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">📅</div>
-                    <p>No upcoming events</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No upcoming events</p></div>';
             return;
         }
         
-        container.innerHTML = upcoming.map(event => this.renderEventCard(event)).join('');
+        container.innerHTML = upcoming.map(e => this.renderEventCard(e)).join('');
     }
     
     renderEventCard(event) {
@@ -519,13 +239,9 @@ class ChurchRosterApp {
         
         let partnerInfo = '';
         if (event.partner) {
-            if (event.role === 'STANDBY') {
-                partnerInfo = `<span>👤 Moderator: ${event.partner}</span>`;
-            } else if (event.role === 'MODERATOR') {
-                partnerInfo = `<span>👤 Standby: ${event.partner}</span>`;
-            } else if (event.type === 'gck') {
-                partnerInfo = `<span>👤 With: ${event.partner}</span>`;
-            }
+            if (event.role === 'STANDBY') partnerInfo = `<span>👤 Moderator: ${event.partner}</span>`;
+            else if (event.role === 'MODERATOR') partnerInfo = `<span>👤 Standby: ${event.partner}</span>`;
+            else if (event.type === 'gck') partnerInfo = `<span>👤 With: ${event.partner}</span>`;
         }
         
         return `
@@ -559,16 +275,11 @@ class ChurchRosterApp {
         }
         
         if (filtered.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">📋</div>
-                    <p>No events in this category</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No events in this category</p></div>';
             return;
         }
         
-        container.innerHTML = filtered.map(event => this.renderEventCard(event)).join('');
+        container.innerHTML = filtered.map(e => this.renderEventCard(e)).join('');
     }
     
     renderCalendar() {
@@ -600,10 +311,9 @@ class ChurchRosterApp {
         const today = new Date();
         
         for (let i = firstDay - 1; i >= 0; i--) {
-            const day = daysInPrevMonth - i;
             const div = document.createElement('div');
             div.className = 'calendar-day other-month';
-            div.textContent = day;
+            div.textContent = daysInPrevMonth - i;
             grid.appendChild(div);
         }
         
@@ -645,16 +355,11 @@ class ChurchRosterApp {
         const dayEvents = this.userEvents.filter(e => e.date === dateStr);
         
         if (dayEvents.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">📅</div>
-                    <p>No events on this day</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>No events on this day</p></div>';
             return;
         }
         
-        container.innerHTML = dayEvents.map(event => this.renderEventCard(event)).join('');
+        container.innerHTML = dayEvents.map(e => this.renderEventCard(e)).join('');
     }
     
     navigateTo(page) {
@@ -671,23 +376,9 @@ class ChurchRosterApp {
         else if (page === 'calendar') this.renderCalendar();
     }
     
-    showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `toast show ${type}`;
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-    
     logout() {
         localStorage.removeItem('dlbc_user');
-        localStorage.removeItem('dlbc_phone');
-        localStorage.removeItem('dlbc_apikey');
-        localStorage.removeItem('dlbc_sent_reminders');
-        localStorage.removeItem('dlbc_last_reminder');
         this.currentUser = null;
-        this.phoneNumber = null;
-        this.apiKey = null;
-        this.sentReminders = {};
         this.showLogin();
     }
     
@@ -695,16 +386,14 @@ class ChurchRosterApp {
         if ('serviceWorker' in navigator) {
             try {
                 await navigator.serviceWorker.register('./sw.js');
-            } catch (error) {
-                console.log('SW registration failed:', error);
+            } catch (e) {
+                console.log('SW error:', e);
             }
         }
     }
 }
 
-// Global reference for inline handlers
-let app;
 document.addEventListener('DOMContentLoaded', () => {
-    app = new ChurchRosterApp();
+    const app = new ChurchRosterApp();
     app.init();
 });
