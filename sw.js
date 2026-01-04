@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dlbc-roster-v4';
+const CACHE_NAME = 'dlbc-roster-v5';
 const urlsToCache = ['./', './index.html', './app.js', './schedules.js', './manifest.json', './pastor.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
