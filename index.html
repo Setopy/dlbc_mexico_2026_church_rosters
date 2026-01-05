@@ -14,6 +14,42 @@
     
     <title>DLBC Mexico - Church Roster 2026</title>
     
+    <!-- OneSignal Push Notifications -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "0a09a8f6-0ceb-4d03-b59d-9aa410f1973d",
+                notifyButton: {
+                    enable: true,
+                    size: 'medium',
+                    position: 'bottom-right',
+                    prenotify: true,
+                    showCredit: false,
+                    text: {
+                        'tip.state.unsubscribed': 'Get event reminders',
+                        'tip.state.subscribed': 'Notifications enabled',
+                        'tip.state.blocked': 'Notifications blocked',
+                        'message.prenotify': 'Click to get event reminders',
+                        'message.action.subscribed': "You'll receive reminders!",
+                        'message.action.resubscribed': "You're subscribed!",
+                        'message.action.unsubscribed': "You won't receive reminders",
+                        'dialog.main.title': 'Manage Notifications',
+                        'dialog.main.button.subscribe': 'SUBSCRIBE',
+                        'dialog.main.button.unsubscribe': 'UNSUBSCRIBE',
+                        'dialog.blocked.title': 'Unblock Notifications',
+                        'dialog.blocked.message': 'Click here for instructions'
+                    }
+                },
+                welcomeNotification: {
+                    title: "DLBC Mexico Roster",
+                    message: "You'll now receive event reminders! 🙏"
+                }
+            });
+        });
+    </script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -443,9 +479,8 @@
                 </div>
             </div>
             
-              
             <div class="info-box">
-                <h3>📱 <strong>Matthew 25:21</strong></h3>
+                <h3>📖 <strong>Matthew 25:21</strong></h3>
                 <p><strong>His lord said unto him, Well done, thou good and faithful servant:<br>
                 thou hast been faithful over a few things,<br>
                 I will make thee ruler over many things:<br>
