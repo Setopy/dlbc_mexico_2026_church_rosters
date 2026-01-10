@@ -21,6 +21,8 @@
         OneSignalDeferred.push(async function(OneSignal) {
             await OneSignal.init({
                 appId: "0a09a8f6-0ceb-4d03-b59d-9aa410f1973d",
+                serviceWorkerParam: { scope: '/dlbc_mexico_2026_church_rosters/' },
+                serviceWorkerPath: '/dlbc_mexico_2026_church_rosters/OneSignalSDKWorker.js',
                 notifyButton: {
                     enable: true,
                     size: 'medium',
